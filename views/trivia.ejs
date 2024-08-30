@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+    <script>
+        function showAnswer(answerId){
+            const answerElement = document.getElementById(answerId);
+            answerElement.style.display ='block'
+        }
+    </script>
+  </head>
+  <body>
+      <div class="container">
+        <h1>Trivia Quiz</h1>
+        <ol>
+            <% questions.forEach((question, index) => { %>
+                <li>
+                    <p><=% questions.question %></p>
+                    <ul>
+                        <% questions.incorrect_answers.concat(question.correct_answer).forEach(answer => { %>
+                            <li><%= answer %></li>
+                        <%}) %>
+                    </ul>
+                
+                <p id="answer-<%= index %>" style="display: none">
+                    Correct Answer : <%= question.correct_answer %>
+                </p>
+                <button onClick="showAnswer('answer-<%= index %>')">
+                    Show the answer
+                </button>
+
+                </li>
+           <% }) %>
+        </ol>
+        <a href="/">Start Over The Quiz</a>
+      </div>
+  </body>
+</html>
