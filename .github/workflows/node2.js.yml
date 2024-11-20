@@ -1,34 +1,36 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
+name: Commitlint
 
 on:
-  workflow_dispatch:
+  push:
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
-  build:
-
+  commitlint:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    name: Commitlint
 
     steps:
-    - name: Conventional Commitlint
-      uses: opensource-nepal/commitlint@v1
-    - uses: actions/checkout@v4
-    - name: Conventional Commitlint
-      uses: opensource-nepal/commitlint@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    #- run: npm test
+      # Checkout the code to access the repository files
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Node.js to install dependencies (optional if you want local commitlint config)
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'  # Choose the appropriate Node.js version
+
+      # Install commitlint and commitlint config (if needed)
+      - name: Install commitlint and dependencies
+        run: |
+          npm install --save-dev @commitlint/config-conventional @commitlint/cli
+
+      # Run commitlint
+      - name: Run commitlint
+        run: |
+          npx commitlint --from=HEAD~1 --to=HEAD
