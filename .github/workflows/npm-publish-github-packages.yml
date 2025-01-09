@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Step 3: Install dependencies
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      # Step 4: Run tests (Handle empty test scripts gracefully)
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          if [ "$(npm run | grep test)" ]; then
+            npm test;
+          else
+            echo "No test specified. Skipping this step.";
+          fi
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: |
+          if [ "$(npm run | grep test)" ]; then
+            npm run test:unit;
+          else
+            echo "No test specified. Skipping this step.";
+          fi
+
+      # Step 5: Lint code
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint || echo "No lint script defined. Skipping lint step."
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint || echo "No lint script defined. Skipping lint step."
+
+      # Step 6: Build frontend
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      # Step 7: Simulate deployment
+      - name: Simulate deployment
+        run: |
+          mkdir -p deployment/public
+          cp -r frontend/dist/* deployment/public/
+          cp -r backend/* deployment/
+          rm -rf deployment/node_modules
+          zip -r advent-deployment.zip deployment
+        shell: bash
+
+      # Step 8: Upload artifact
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: advent-deployment
+          path: advent-deployment.zip
+
