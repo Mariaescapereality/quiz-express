@@ -1,0 +1,85 @@
+name: CI/CD Pipeline #nomAuChoix
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      
+jobs: #githubvacreerunserveurvirtuelquivalancernotrecode
+  lint:
+    name: Lint code #le nom est au choix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3 #récupérerlecode
+      - name: Set up Node.js
+        uses: actions/setup-node@v3 #installnode
+        with:
+          node-version: 18
+      - name: Install Dependencies
+        run: npm ci #npmcleaninstall
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    name: launch test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install Dependencies
+        run: npm ci #npm clean install
+      - name: run test
+        run: npm run test:unit
+
+  build:
+    name: launch build
+    runs-on: ubuntu-latest
+    needs: [lint, test] #abesoinsdesjobsprécédentspourfonctionner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install Dependencies
+        run: npm ci #npm clean install
+      - name: launch build
+        run: npm run build
+
+      - name: build artefact
+        uses: actions/upload-artifact@v4 #onamitdecotenotredist
+        with:
+          name: build
+          path: dist
+          
+  deploy:
+    name: Deploy to Netlify
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: ./dist # Spécifie où les artefacts doivent être téléchargés
+  
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+  
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: netlify deploy --dir=./dist --prod
